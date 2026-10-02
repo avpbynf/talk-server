@@ -17,6 +17,7 @@ rest/main.py        <-- application factory, health endpoint
     |
     +-- rest/routes.py          versioned router (/v1 prefix)
     |    +-- rest/v1/transcriptions/router.py   transcription endpoints
+    |    +-- rest/v1/models/router.py          model listing
     +-- rest/admin/routes.py    token dashboard and CRUD
 ```
 
@@ -24,6 +25,7 @@ Where a new endpoint goes:
 
 - health (`/health`) belongs in `rest/main.py`
 - transcription (`/v1/audio/transcriptions*`) belongs in `rest/v1/transcriptions/router.py`
+- model listing (`/v1/models`) belongs in `rest/v1/models/router.py`
 - token management (`/admin/*`) belongs in `rest/admin/routes.py`
 
 ---
@@ -162,6 +164,24 @@ data: {"message": "GPU queue timeout exceeded after 120s", "type": "QueueTimeout
 ```
 
 This route is an extension; the OpenAI API has no equivalent.
+
+---
+
+### GET /v1/models
+
+| Property | Value |
+|---|---|
+| Method | `GET` |
+| Path | `/v1/models` |
+| Auth | Bearer token |
+| Response | `200` JSON |
+
+```json
+{"object": "list", "data": [{"id": "Systran/faster-whisper-large-v3", "object": "model", "owned_by": "talk"}]}
+```
+
+Lists the one configured model. It is cheap and needs a valid token, so a client can
+tell a refused token (`401`) from a good one before sending audio.
 
 ---
 
