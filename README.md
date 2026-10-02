@@ -69,6 +69,7 @@ the healthcheck stays red until the model is resident.
 |---|---|---|---|
 | POST | `/v1/audio/transcriptions` | Bearer | Full transcription, OpenAI-compatible |
 | POST | `/v1/audio/transcriptions/stream` | Bearer | The same, streamed over SSE |
+| GET | `/v1/models` | Bearer | The loaded model, and a way to check a token |
 | GET | `/health` | none | Model state, device, queue depth |
 | GET | `/admin/` | `ADMIN_TOKEN` | Token management dashboard |
 | * | `/admin/tokens[...]` | `ADMIN_TOKEN` | Token CRUD and per-token usage |

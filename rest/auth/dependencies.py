@@ -15,12 +15,11 @@ from rest.db.models import Token, UsageLog
 security = HTTPBearer(auto_error=False)
 
 
-async def verify_token(
-    request: Request,
+async def authenticate_token(
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security)],
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> Token:
-    """Verify the Bearer token, record usage count, and expose token_id.
+    """Check the Bearer token without counting the request as usage.
 
     Raises:
         HTTPException: 401 if the header is missing, or the token is unknown/revoked.
@@ -38,6 +37,19 @@ async def verify_token(
             detail="Invalid or revoked token",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    return token
+
+
+async def verify_token(
+    request: Request,
+    token: Annotated[Token, Depends(authenticate_token)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> Token:
+    """Check the Bearer token, record usage count, and expose token_id.
+
+    Raises:
+        HTTPException: 401 if the header is missing, or the token is unknown/revoked.
+    """
     await update_token_usage(db, token)
     request.state.token_id = token.id
     return token
