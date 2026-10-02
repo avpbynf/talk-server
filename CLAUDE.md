@@ -26,6 +26,18 @@ dependencies. `make up` rebuilds the image, which is what picks up new deps.
 - `rest/settings.py` holds pydantic-settings config
 - `tests/` mirrors `rest/`
 
+## Branches
+
+`dev` is where work lands, `main` is what has been released, and `main` is an exact prefix of
+`dev`. A batch takes its own branch off `dev`, named `<type>/what-it-does`, and comes back by
+pull request merged with the rebase button. `dev` reaches `main` by a fast-forward and by no
+button, at a release, and the tag is the release.
+
+**All of it is in [CONTRIBUTING.md](CONTRIBUTING.md)**, which is the only home for it: the
+branch names, the commit subjects, the labels, the changelog, where the version lives and the
+order a release goes out in. `.github/commit-format.sh` holds the subject and branch rule, and
+the workflows run that same file.
+
 ## Conventions
 
 - English in code and docstrings, Google style
