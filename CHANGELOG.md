@@ -24,3 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Python 3.11 is the oldest version the server runs on. It already was in practice: the
   speech model runtime it depends on publishes nothing for 3.10, so an install there
   failed before starting.
+
+### Fixed
+
+- `PORT` now sets the port in the container and under `make dev`. Both used to listen
+  on 8000 whatever it said.
