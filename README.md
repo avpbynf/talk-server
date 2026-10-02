@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/python-3.10%2B-6366f1?style=flat-square" alt="Python 3.10+">
+  <img src="https://img.shields.io/badge/python-3.11%2B-6366f1?style=flat-square" alt="Python 3.11+">
   <img src="https://img.shields.io/badge/inference-faster--whisper-6366f1?style=flat-square" alt="faster-whisper">
   <a href="LICENSE"><img src="https://img.shields.io/badge/licence-MIT-6366f1?style=flat-square" alt="MIT"></a>
 </p>
