@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Every request answers 401
+    url: https://github.com/avpbynf/talk-server/blob/main/README.md
+    about: With ADMIN_TOKEN unset the admin pages are off and every /v1 route answers 401. The warning printed at startup is the only clue, so look there first.
+  - name: The first start is slow
+    url: https://github.com/avpbynf/talk-server/blob/main/README.md
+    about: The model downloads from HuggingFace on the first start. A cold container is slow, not hung, and the logs say which file it is on.

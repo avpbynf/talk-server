@@ -1,0 +1,72 @@
+name: Something is wrong
+description: A behaviour that is not what it should be, in a response or in the server itself.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        What is being looked for is the shape of it: what you sent, what came back, and what you
+        expected instead. A report that names the version and how the server is run answers half of
+        itself.
+
+  - type: input
+    id: version
+    attributes:
+      label: Server version or commit
+      description: The version in pyproject.toml, or the commit the image was built from.
+      placeholder: 0.1.0, or b16fe7b
+    validations:
+      required: true
+
+  - type: dropdown
+    id: run
+    attributes:
+      label: How it is run
+      options:
+        - Docker, with docker compose
+        - Docker, some other way
+        - uv, on the host
+        - Something else
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: GPU or CPU
+      description: What the model runs on, which the startup log states.
+      options:
+        - GPU (CUDA)
+        - CPU
+        - I do not know
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happens
+    attributes:
+      label: What happens
+      description: The request you made, what came back, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: machine
+    attributes:
+      label: The machine
+      description: The card and driver version if it is a GPU problem, the model in use, and the relevant settings from the environment (never the token).
+      placeholder: |
+        Card: NVIDIA GeForce RTX 4060, driver 570
+        Model: large-v3-turbo
+        GPU_CONCURRENCY=1
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: The relevant log lines
+      description: What the server printed around the moment, rather than the whole run. "docker compose logs stt" for Docker. Remove any token.
+      render: text
+    validations:
+      required: false
