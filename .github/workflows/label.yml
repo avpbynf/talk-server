@@ -1,0 +1,65 @@
+# The label a pull request carries, posed by the repository instead of remembered by whoever opens
+# it. CONTRIBUTING says a request carries the type of its branch and only that, which makes the
+# label a fact already written in the branch name rather than an opinion about the change. There is
+# nothing to decide here, and that is exactly what makes it forgettable.
+#
+# It refuses nothing. A branch whose first word is not one of the nine types is already refused, by
+# `.github/commit-format.sh` and by `commits.yml` running that same file, so a second complaint here
+# would be one rule living in two places. What this does when it meets one is say so and stop,
+# leaving the request unlabelled and the other workflow to fail it.
+#
+# `pull_request_target` and not `pull_request`, because a request opened from a fork is given a
+# token that may only read. Nothing of the request is checked out or run here: what is read is the
+# name of its branch, and all that is done with it is a match against the words written below.
+#
+# It is deliberately NOT a required check: a `pull_request_target` run attaches to the base rather
+# than to the head commit a protection watches, so requiring it would block every merge on a verdict
+# that never arrives.
+
+name: label
+
+on:
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: The type in the branch name, on the request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          NUMBER: ${{ github.event.pull_request.number }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          type="${BRANCH%%/*}"
+          case "$type" in
+            feat|fix|perf|refactor|docs|test|build|ci|chore)
+              # The fallback keeps the header's promise: a pose that fails, label deleted, API
+              # down or token short, leaves a notice and a green run on a request that broke no
+              # rule. The label can always be put on by hand.
+              if gh pr edit "$NUMBER" --repo "$REPOSITORY" --add-label "$type"; then
+                echo "Labelled $type, which is what the branch $BRANCH opens with."
+              else
+                echo "::notice::Posing the label $type failed, so nothing is posed."
+              fi
+              ;;
+            release|dev)
+              # A release request carries no type, and `release` instead. Two branches open one:
+              # `release/<version>`, which lands the bump in dev, and `dev` itself, which main
+              # takes by a fast-forward and no other branch opens a request from.
+              if gh pr edit "$NUMBER" --repo "$REPOSITORY" --add-label release; then
+                echo "Labelled release, which is what a request from $BRANCH is."
+              else
+                echo "::notice::Posing the label release failed, so nothing is posed."
+              fi
+              ;;
+            *)
+              echo "::notice::$BRANCH opens with no type CONTRIBUTING knows, so nothing is posed."
+              echo "::notice::The branch name itself is answered by commits.yml, not here."
+              ;;
+          esac
