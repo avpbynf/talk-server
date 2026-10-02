@@ -1,0 +1,74 @@
+# What every batch owes before it enters dev: the same four gates `make lint` and `make test` run,
+# on every Python the project supports, and a build of the Docker image to show the Dockerfile still
+# resolves against the lockfile.
+#
+# The suite needs no GPU: the model is never loaded in a test, so a plain Linux runner answers for
+# everything except CUDA itself. What that costs is written down rather than hidden: whether the
+# image actually transcribes on a card is checked by whoever deploys it.
+
+name: build
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      # One version failing says something the others do not, so let each of them finish.
+      fail-fast: false
+      matrix:
+        python: ["3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen --python ${{ matrix.python }}
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Formatting
+        run: uv run ruff format --check .
+
+      - name: Types
+        run: uv run mypy rest
+
+      # The floor is the one `make test` enforces, so a branch that passes here passes there.
+      - name: Tests and the coverage floor
+        run: uv run pytest --cov=rest --cov-report=term-missing --cov-fail-under=80
+
+  image:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      # Built and thrown away: nothing is pushed, because there is no registry image to publish.
+      # Whoever deploys builds their own from the Dockerfile.
+      - name: Build the image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
