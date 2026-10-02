@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from rest.admin import router as admin_router
 from rest.db.database import close_db, init_db
+from rest.discovery import start_announcement, stop_announcement
 from rest.engine import WhisperEngine
 from rest.middlewares import (
     AccessLogMiddleware,
@@ -51,8 +52,11 @@ async def lifespan(app: FastAPI):
     await engine.load()
     app.state.engine = engine
 
+    announcement = await start_announcement(settings)
+
     yield
 
+    await stop_announcement(announcement)
     engine.unload()
     await close_db()
 
