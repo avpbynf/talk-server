@@ -73,6 +73,7 @@ the healthcheck stays red until the model is resident.
 | GET | `/health` | none | Model state, device, queue depth |
 | GET | `/admin/` | `ADMIN_TOKEN` | Token management dashboard |
 | * | `/admin/tokens[...]` | `ADMIN_TOKEN` | Token CRUD and per-token usage |
+| POST | `/pairing/request`, `/pairing/confirm` | none | Get a token with a code, see Pairing |
 
 `/health` deliberately needs no token: it is what lets a client probe reachability
 before it holds one, and what lets a monitor work without being given a secret.
@@ -94,6 +95,7 @@ All of it lives in `.env`.
 | `DATABASE_URL` | `sqlite+aiosqlite:///./data/tokens.db` | Token store |
 | `ADMIN_TOKEN` | (empty) | Admin credential, and empty disables `/admin` |
 | `MDNS_ENABLED` | `true` | Announce the server on the local network |
+| `PAIRING_ENABLED` | `true` | Let clients pair with a code, needs `ADMIN_TOKEN` |
 
 `GPU_CONCURRENCY` stays at 1 for a reason: one card serialises the work anyway, and
 raising it trades latency for an out-of-memory risk you only discover under load.
@@ -112,6 +114,23 @@ taken) only logs a warning.
 Multicast does not leave a Docker bridge network, so under Docker the announcement
 only reaches the LAN with `network_mode: host` on the service (and then the `ports`
 mapping is no longer needed). Otherwise clients still connect by typing the address.
+
+### Pairing
+
+A Talk client can get a token without anyone copying one. It asks the server for a
+pairing request, and the server generates a 6-digit code that only you, the operator,
+can see: it is logged at WARNING by the server (`make logs` under Docker) and listed
+under "Pairing Requests" in the `/admin/` dashboard, which refreshes by itself. Read
+the code to whoever is at the client and they type it there. The server then mints a
+token named `<client name> (paired)`, and you can revoke it like any other.
+
+A code lives two minutes, five wrong guesses cancel the request, and at most five
+requests wait at once, one per machine: asking again replaces that machine's previous
+request. Ten wrong codes in total, across every request, turn pairing off until the
+server restarts and log a warning saying so, which is what keeps anyone on the network
+from guessing their way through requests. Pairing mints tokens without an
+administrator present, so it stays off while `ADMIN_TOKEN` is empty. `PAIRING_ENABLED=false` turns it off for good,
+and the mDNS record then says `pairing=0` (`pairing=1` otherwise).
 
 ## Development
 

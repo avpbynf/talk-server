@@ -52,7 +52,7 @@ the workflows run that same file.
 - A single GPU serialises work. `GPU_CONCURRENCY` defaults to 1 and requests queue
   behind `GPU_TIMEOUT`. Raising concurrency on one card trades latency for OOM risk.
 - `ADMIN_TOKEN` unset is a valid but useless state: `/admin` is off and every `/v1`
-  route answers 401. The startup warning is the only clue, so check it first when
+  route answers 401, and pairing is off too. The startup warning is the only clue, so check it first when
   auth "mysteriously" fails.
 - Minted tokens are shown once and stored hashed. There is no recovery path, only
   revoke and re-mint.

@@ -19,6 +19,7 @@ rest/main.py        <-- application factory, health endpoint
     |    +-- rest/v1/transcriptions/router.py   transcription endpoints
     |    +-- rest/v1/models/router.py          model listing
     +-- rest/admin/routes.py    token dashboard and CRUD
+    +-- rest/pairing/           pairing routes and the pending-request store
 ```
 
 Where a new endpoint goes:
@@ -27,6 +28,7 @@ Where a new endpoint goes:
 - transcription (`/v1/audio/transcriptions*`) belongs in `rest/v1/transcriptions/router.py`
 - model listing (`/v1/models`) belongs in `rest/v1/models/router.py`
 - token management (`/admin/*`) belongs in `rest/admin/routes.py`
+- pairing (`/pairing/*`) belongs in `rest/pairing/routes.py`
 
 ---
 
@@ -219,6 +221,58 @@ is how many requests are waiting for a GPU slot.
 delete and per-token usage endpoints. A minted token is shown once and stored hashed,
 so there is no recovery path, only revoke and mint again.
 
+`GET /admin/pairing` lists the pending pairing requests with their codes and the
+seconds each has left. It answers `{"enabled": false, "requests": []}` when pairing
+is off.
+
+---
+
+### POST /pairing/request
+
+| Property | Value |
+|---|---|
+| Method | `POST` |
+| Path | `/pairing/request` |
+| Auth | none |
+| Response | `201` JSON |
+
+Body: `{"client_name": "Laptop"}`, 1 to 64 characters once stripped. Opens a request
+that lives 120 seconds and answers:
+
+```json
+{"request_id": "0b6f0c52-...", "expires_in": 120}
+```
+
+The 6-digit code is never in the response. It is logged at WARNING and listed in the
+admin dashboard, so only the operator can read it. At most 5 requests wait at a time,
+and beyond that the answer is `429`.
+
+---
+
+### POST /pairing/confirm
+
+| Property | Value |
+|---|---|
+| Method | `POST` |
+| Path | `/pairing/confirm` |
+| Auth | none |
+| Response | `200` JSON |
+
+Body: `{"request_id": "...", "code": "123456"}`. A right code mints a token named
+`<client_name> (paired)` and answers it once:
+
+```json
+{"token": "sk_...", "name": "Laptop (paired)"}
+```
+
+An unknown or expired request answers `410`. A wrong code answers `401`, and the fifth
+wrong code drops the request, so later tries get `410`. A machine holds one request at a
+time: a new `/pairing/request` from the same address replaces the previous one.
+
+Both routes answer `404` when `PAIRING_ENABLED=false` or `ADMIN_TOKEN` is empty, and
+after ten wrong codes in total, until the server restarts. They
+are not counted as usage.
+
 ---
 
 ## HTTP error codes
@@ -227,7 +281,9 @@ so there is no recovery path, only revoke and mint again.
 |---|---|---|
 | `400` | `InvalidAudioError` | Bad file format or size, unsupported response format |
 | `401` | -- | Missing, malformed or revoked Bearer token |
+| `410` | -- | Pairing request unknown, expired or out of attempts |
 | `422` | FastAPI validation | Missing or mistyped form field |
+| `429` | -- | Too many pairing requests pending |
 | `500` | `TranscriptionError` | The model failed to transcribe |
 | `503` | `QueueTimeoutError` | Waited longer than `GPU_TIMEOUT` for the GPU |
 

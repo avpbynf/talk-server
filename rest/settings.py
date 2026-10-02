@@ -21,8 +21,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///./data/tokens.db"
     ADMIN_TOKEN: str = ""
     MDNS_ENABLED: bool = True
+    PAIRING_ENABLED: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    @property
+    def pairing_active(self) -> bool:
+        """Pairing mints tokens, so it needs an admin to exist."""
+        return self.PAIRING_ENABLED and bool(self.ADMIN_TOKEN)
 
 
 @functools.lru_cache

@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   turn it off. Under Docker the announcement only leaves the container with
   `network_mode: host`. A failed announcement logs a warning and never stops the
   server.
+- A Talk client can now get a token by pairing: it asks for a request, and you read
+  it a 6-digit code that shows in the server log (WARNING) and under "Pairing
+  Requests" in the `/admin/` dashboard. Typing the code on the client mints a token
+  named `<client name> (paired)`. Codes last two minutes, five wrong tries cancel the
+  request, and five requests can wait at once, one per machine. Ten wrong codes in
+  total turn pairing off until the server restarts. Pairing is off while `ADMIN_TOKEN` is
+  empty (the startup warning says so), and `PAIRING_ENABLED=false` turns it off. The
+  mDNS record carries `pairing=1` or `pairing=0` accordingly.
 
 ### Changed
 

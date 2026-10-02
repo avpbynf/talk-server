@@ -46,7 +46,7 @@ def test_build_service_info_describes_the_server():
         patch("rest.discovery._local_ipv4_addresses", return_value=["192.168.1.20"]),
         patch("rest.discovery.socket.gethostname", return_value="box.lan"),
     ):
-        info = discovery.build_service_info(_settings())
+        info = discovery.build_service_info(_settings(ADMIN_TOKEN=""))
 
     assert info is not None
     assert info.type == "_talk._tcp.local."
@@ -57,6 +57,7 @@ def test_build_service_info_describes_the_server():
         "engine": "faster-whisper",
         "model": "tiny",
         "auth": "token",
+        "pairing": "0",
     }
 
 
