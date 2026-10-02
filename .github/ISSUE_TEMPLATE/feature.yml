@@ -1,0 +1,35 @@
+name: Something is missing
+description: A gap, or something the server could do and does not.
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The useful half of a request like this is the situation behind it. What were you doing when
+        the gap showed itself, and what did you do instead?
+
+  - type: textarea
+    id: the-gap
+    attributes:
+      label: What is missing
+      description: What the server does today, and what it would do instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: the-situation
+    attributes:
+      label: Where it showed itself
+      description: |
+        What you were doing at the time, and what you did instead. A gap met once in passing and a
+        gap met every day are not the same request, and only this says which.
+    validations:
+      required: true
+
+  - type: textarea
+    id: anything-else
+    attributes:
+      label: Anything else
+      description: Another server that does it, a shape you have in mind, or what would make it worse.
+    validations:
+      required: false
