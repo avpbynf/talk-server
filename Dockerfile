@@ -36,6 +36,8 @@ ENV HF_HOME=/app/.cache/huggingface
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
-CMD ["uv", "run", "uvicorn", "rest.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Shell form so PORT from the environment is honoured: the network
+# announcement tells clients settings.PORT, and the two have to agree.
+CMD exec uv run uvicorn rest.main:app --host 0.0.0.0 --port ${PORT:-8000}

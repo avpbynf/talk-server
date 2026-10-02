@@ -9,7 +9,7 @@ sync: ## Install/sync dependencies via uv
 	uv sync
 
 dev: ## Start server locally (uvicorn with reload)
-	uv run uvicorn rest.main:app --host 0.0.0.0 --port 8000 --reload
+	uv run uvicorn rest.main:app --host 0.0.0.0 --port $(or $(PORT),8000) --reload
 
 test: ## Run tests with coverage (80% minimum)
 	uv run pytest --cov=rest --cov-report=term-missing --cov-fail-under=80
