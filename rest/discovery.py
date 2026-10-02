@@ -77,6 +77,7 @@ def build_service_info(settings: Settings) -> ServiceInfo | None:
             "engine": "faster-whisper",
             "model": settings.WHISPER_MODEL,
             "auth": "token",
+            "pairing": "1" if settings.pairing_active else "0",
         },
         server=f"{hostname}.local.",
         addresses=[socket.inet_aton(a) for a in addresses],

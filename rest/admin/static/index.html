@@ -93,6 +93,28 @@
                 </div>
             </div>
 
+            <!-- Pairing Section -->
+            <div x-show="pairing.enabled" x-cloak class="mb-8 bg-gray-800 rounded-lg border border-gray-700">
+                <div class="p-6 border-b border-gray-700">
+                    <h2 class="text-lg font-semibold">Pairing Requests</h2>
+                    <p class="text-sm text-gray-400 mt-1">A client asking for a token shows up here. Read the code to whoever is typing it.</p>
+                </div>
+                <div class="divide-y divide-gray-700">
+                    <template x-for="req in pairing.requests" :key="req.code + req.client_name">
+                        <div class="px-6 py-4 flex items-center justify-between">
+                            <span class="font-medium" x-text="req.client_name"></span>
+                            <span class="flex items-center gap-4">
+                                <span class="text-2xl font-mono tracking-widest text-yellow-400" x-text="req.code"></span>
+                                <span class="text-sm text-gray-400" x-text="req.seconds_left + 's left'"></span>
+                            </span>
+                        </div>
+                    </template>
+                    <div x-show="pairing.requests.length === 0" class="px-6 py-8 text-center text-gray-500">
+                        No pairing request pending.
+                    </div>
+                </div>
+            </div>
+
             <!-- Tokens Section -->
             <div class="bg-gray-800 rounded-lg border border-gray-700">
                 <div class="p-6 border-b border-gray-700 flex items-center justify-between">
@@ -291,6 +313,8 @@
                 authenticated: false,
                 adminToken: '',
                 tokens: [],
+                pairing: { enabled: false, requests: [] },
+                pairingTimer: null,
                 loading: false,
                 showCreateModal: false,
                 newTokenName: '',
@@ -306,6 +330,7 @@
                         this.adminToken = saved;
                         this.authenticated = true;
                         this.loadTokens();
+                        this.startPairingPoll();
                     }
                 },
 
@@ -319,6 +344,7 @@
                             sessionStorage.setItem('adminToken', this.adminToken);
                             this.authenticated = true;
                             this.loadTokens();
+                            this.startPairingPoll();
                         } else {
                             this.showToast('Invalid admin token', 'error');
                         }
@@ -333,6 +359,27 @@
                     this.authenticated = false;
                     this.adminToken = '';
                     this.tokens = [];
+                    clearInterval(this.pairingTimer);
+                    this.pairing = { enabled: false, requests: [] };
+                },
+
+                startPairingPoll() {
+                    clearInterval(this.pairingTimer);
+                    this.loadPairing();
+                    this.pairingTimer = setInterval(() => this.loadPairing(), 3000);
+                },
+
+                async loadPairing() {
+                    try {
+                        const res = await fetch('/admin/pairing', {
+                            headers: { 'Authorization': `Bearer ${this.adminToken}` }
+                        });
+                        if (res.ok) {
+                            this.pairing = await res.json();
+                        }
+                    } catch (e) {
+                        // Next tick retries; a toast every 3 seconds would only nag.
+                    }
                 },
 
                 async loadTokens() {

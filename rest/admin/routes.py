@@ -9,7 +9,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from rest.auth.tokens import (
@@ -20,6 +20,7 @@ from rest.auth.tokens import (
     revoke_token,
 )
 from rest.db.database import get_db
+from rest.pairing.store import get_store
 from rest.settings import get_settings
 
 
@@ -71,6 +72,25 @@ class SuccessResponse(BaseModel):
     """Generic success body."""
 
     success: bool
+
+
+class PendingPairing(BaseModel):
+    """A pairing request waiting for its code to be typed on the client."""
+
+    model_config = ConfigDict(frozen=True)
+
+    client_name: str
+    code: str
+    seconds_left: int
+
+
+class PairingListResponse(BaseModel):
+    """Pending pairing requests. Empty and disabled when pairing is off."""
+
+    model_config = ConfigDict(frozen=True)
+
+    enabled: bool
+    requests: list[PendingPairing]
 
 
 admin_security = HTTPBearer(auto_error=False)
@@ -180,3 +200,21 @@ async def get_token_statistics(
     if stats is None:
         raise HTTPException(status_code=404, detail="Token not found")
     return TokenStatsResponse(**stats)
+
+
+@router.get("/pairing", response_model=PairingListResponse)
+async def list_pairing_requests(_admin: AdminAuth) -> PairingListResponse:
+    """List pending pairing requests with their codes, for the operator."""
+    if not get_settings().pairing_active:
+        return PairingListResponse(enabled=False, requests=[])
+    return PairingListResponse(
+        enabled=True,
+        requests=[
+            PendingPairing(
+                client_name=request.client_name,
+                code=request.code,
+                seconds_left=seconds_left,
+            )
+            for request, seconds_left in get_store().pending()
+        ],
+    )

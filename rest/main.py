@@ -17,6 +17,7 @@ from rest.middlewares import (
     add_exception_middleware,
 )
 from rest.models import HealthResponse
+from rest.pairing import router as pairing_router
 from rest.routes import router
 from rest.settings import get_settings
 
@@ -42,8 +43,8 @@ async def lifespan(app: FastAPI):
     if not settings.ADMIN_TOKEN:
         logging.getLogger(__name__).warning(
             "ADMIN_TOKEN is not set: /admin is disabled and no tokens can be "
-            "minted, so all /v1 requests will return 401. Set ADMIN_TOKEN to "
-            "enable token management."
+            "minted, so all /v1 requests will return 401. Pairing is off for "
+            "the same reason. Set ADMIN_TOKEN to enable token management."
         )
 
     await init_db()
@@ -104,6 +105,9 @@ def create_app() -> FastAPI:
 
     # Routes: all /v1 endpoints require a valid Bearer token (see rest/routes.py)
     app.include_router(router)
+
+    # Pairing: unauthenticated by design, gated by a code the operator reads
+    app.include_router(pairing_router)
 
     # Admin token management (protected by its own ADMIN_TOKEN)
     app.include_router(admin_router)
