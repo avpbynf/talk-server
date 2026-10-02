@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     DEFAULT_LANGUAGE: str = "fr"
     DATABASE_URL: str = "sqlite+aiosqlite:///./data/tokens.db"
     ADMIN_TOKEN: str = ""
+    MDNS_ENABLED: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 

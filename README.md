@@ -93,12 +93,25 @@ All of it lives in `.env`.
 | `LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` |
 | `DATABASE_URL` | `sqlite+aiosqlite:///./data/tokens.db` | Token store |
 | `ADMIN_TOKEN` | (empty) | Admin credential, and empty disables `/admin` |
+| `MDNS_ENABLED` | `true` | Announce the server on the local network |
 
 `GPU_CONCURRENCY` stays at 1 for a reason: one card serialises the work anyway, and
 raising it trades latency for an out-of-memory risk you only discover under load.
 Requests queue instead, and the queue depth is on `/health`.
 
 Tokens live in SQLite on the `token-data` volume and survive a rebuild.
+
+### Network discovery
+
+Once the model is loaded the server announces itself over mDNS as `_talk._tcp.local.`,
+named after the machine, so Talk clients on the same network can find it without a
+typed address. The record carries the port, the model, and `auth=token`. Set
+`MDNS_ENABLED=false` to stay silent. A failed announcement (no network, UDP port 5353
+taken) only logs a warning.
+
+Multicast does not leave a Docker bridge network, so under Docker the announcement
+only reaches the LAN with `network_mode: host` on the service (and then the `ports`
+mapping is no longer needed). Otherwise clients still connect by typing the address.
 
 ## Development
 
