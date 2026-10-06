@@ -47,4 +47,4 @@ Say which of these the claim rests on. An unticked line is not a failure, it is 
 - [ ] `CHANGELOG.md` carries an entry under `Unreleased`, or this changes nothing anybody running
       the server would notice.
 - [ ] Every place that states a fact this branch changed now states the new one: `README.md`,
-      `CONTRIBUTING.md`, `CLAUDE.md`, `.env.example`, `docs/`, and the comments around the code.
+      `CONTRIBUTING.md`, `.env.example`, `docs/`, and the comments around the code.
